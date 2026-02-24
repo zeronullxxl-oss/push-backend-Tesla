@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Push Admin — Tesla Mindledge</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0f0f; color: #e3e3e3;
+            min-height: 100vh; padding: 20px;
+        }
+        .container { max-width: 700px; margin: 0 auto; }
+        h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; color: #fff; }
+        .subtitle { color: rgba(255,255,255,0.5); margin-bottom: 30px; font-size: 14px; }
+
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px; margin-bottom: 30px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px; padding: 18px; text-align: center;
+        }
+        .stat-val { font-size: 32px; font-weight: 700; color: #E5001B; }
+        .stat-lbl { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .card {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; padding: 24px; margin-bottom: 20px;
+        }
+        .card h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #fff; }
+
+        label { display: block; font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
+        input, textarea {
+            width: 100%; padding: 12px 14px;
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px; color: #fff; font-size: 15px;
+            outline: none; transition: border-color 0.2s;
+            margin-bottom: 14px; font-family: inherit;
+        }
+        input:focus, textarea:focus { border-color: #E5001B; }
+        textarea { resize: vertical; min-height: 80px; }
+
+        .btn {
+            padding: 12px 24px; border: none; border-radius: 10px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary { background: #E5001B; color: #fff; }
+        .btn-primary:hover { background: #ff1a33; transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-secondary {
+            background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+
+        .quick-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+
+        .result {
+            margin-top: 14px; padding: 12px 16px;
+            background: rgba(255,255,255,0.04); border-radius: 10px;
+            font-size: 13px; color: rgba(255,255,255,0.7);
+            display: none; white-space: pre-wrap; font-family: monospace;
+        }
+        .result.show { display: block; }
+        .result.success { border-left: 3px solid #30D158; }
+        .result.error { border-left: 3px solid #E5001B; }
+
+        .divider { height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0; }
+
+        @media (max-width:480px) {
+            body { padding: 12px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 Push Admin</h1>
+        <p class="subtitle">Tesla Mindledge — Push Notification Control Panel</p>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-val" id="statSubs">—</div>
+                <div class="stat-lbl">Subscribers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="statSent">—</div>
+                <div class="stat-lbl">Total Sent</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="statErrors">—</div>
+                <div class="stat-lbl">Errors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="statLast" style="font-size:14px;">—</div>
+                <div class="stat-lbl">Last Sent</div>
+            </div>
+        </div>
+
+        <button class="btn btn-secondary" onclick="loadStats()" style="margin-bottom:20px;">🔄 Refresh Stats</button>
+
+        <!-- Quick Buttons -->
+        <div class="card">
+            <h2>⚡ Quick Send</h2>
+            <div class="quick-buttons">
+                <button class="btn btn-secondary" onclick="quickSend('📈 Market Alert', 'BTC surged +5.2% in the last hour. Check your portfolio now!')">📈 BTC Alert</button>
+                <button class="btn btn-secondary" onclick="quickSend('🔥 Trading Signal', 'New AI signal detected: Strong BUY opportunity. Open the app to view details.')">🔥 Signal</button>
+                <button class="btn btn-secondary" onclick="quickSend('💰 Profit Update', 'Your portfolio is up +$340 today! See the full breakdown inside.')">💰 Profit</button>
+                <button class="btn btn-secondary" onclick="quickSend('🚀 Platform Update', 'New features available! Enhanced AI analysis and faster execution speeds.')">🚀 Update</button>
+                <button class="btn btn-secondary" onclick="quickSend('⚠️ Urgent', 'Important market shift detected. Review your positions immediately.')">⚠️ Urgent</button>
+                <button class="btn btn-secondary" onclick="quickSend('🎁 Special Offer', 'Exclusive bonus available for verified members. Claim it before it expires!')">🎁 Offer</button>
+            </div>
+            <div id="quickResult" class="result"></div>
+        </div>
+
+        <!-- Custom Push -->
+        <div class="card">
+            <h2>✏️ Custom Push</h2>
+            <label>Title *</label>
+            <input type="text" id="pushTitle" placeholder="Notification title...">
+            
+            <label>Body *</label>
+            <textarea id="pushBody" placeholder="Notification message..."></textarea>
+            
+            <label>Image URL (optional)</label>
+            <input type="url" id="pushImage" placeholder="https://example.com/image.jpg">
+            
+            <label>Click URL (optional)</label>
+            <input type="text" id="pushUrl" placeholder="/" value="/">
+            
+            <button class="btn btn-primary" id="sendBtn" onclick="sendCustom()">🚀 Send Push</button>
+            
+            <div id="customResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+
+        async function loadStats() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/stats`);
+                const data = await resp.json();
+                document.getElementById('statSubs').textContent = data.subscribers;
+                document.getElementById('statSent').textContent = data.totalSent;
+                document.getElementById('statErrors').textContent = data.totalErrors;
+                document.getElementById('statLast').textContent = data.lastSentAt 
+                    ? new Date(data.lastSentAt).toLocaleString() 
+                    : 'Never';
+            } catch (err) {
+                console.error('Stats error:', err);
+            }
+        }
+
+        async function sendPush(title, body, image, url) {
+            const resp = await fetch(`${API_BASE}/api/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, body, image: image || undefined, url: url || '/' })
+            });
+            return resp.json();
+        }
+
+        async function quickSend(title, body) {
+            const el = document.getElementById('quickResult');
+            el.className = 'result show';
+            el.textContent = 'Sending...';
+            try {
+                const data = await sendPush(title, body);
+                el.className = 'result show success';
+                el.textContent = `✅ Sent: ${data.sent} | Errors: ${data.errors} | Cleaned: ${data.cleaned} | Total subs: ${data.totalSubscribers}`;
+                loadStats();
+            } catch (err) {
+                el.className = 'result show error';
+                el.textContent = `❌ Error: ${err.message}`;
+            }
+        }
+
+        async function sendCustom() {
+            const title = document.getElementById('pushTitle').value.trim();
+            const body = document.getElementById('pushBody').value.trim();
+            const image = document.getElementById('pushImage').value.trim();
+            const url = document.getElementById('pushUrl').value.trim();
+            const el = document.getElementById('customResult');
+
+            if (!title || !body) {
+                el.className = 'result show error';
+                el.textContent = '❌ Title and body are required';
+                return;
+            }
+
+            el.className = 'result show';
+            el.textContent = 'Sending...';
+            document.getElementById('sendBtn').disabled = true;
+
+            try {
+                const data = await sendPush(title, body, image, url);
+                el.className = 'result show success';
+                el.textContent = `✅ Sent: ${data.sent} | Errors: ${data.errors} | Cleaned: ${data.cleaned} | Total subs: ${data.totalSubscribers}`;
+                loadStats();
+            } catch (err) {
+                el.className = 'result show error';
+                el.textContent = `❌ Error: ${err.message}`;
+            } finally {
+                document.getElementById('sendBtn').disabled = false;
+            }
+        }
+
+        // Load stats on page load
+        loadStats();
+    </script>
+</body>
+</html>
