@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel — Tesla Mindledge</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#08080a;color:#e3e3e3;min-height:100vh}
+        .header{background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px)}
+        .header h1{font-size:20px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px}
+        .header h1 span{color:#E5001B}
+        .tabs{display:flex;gap:4px;background:rgba(255,255,255,0.04);border-radius:10px;padding:4px}
+        .tab{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:rgba(255,255,255,0.5);transition:all .2s;border:none;background:none}
+        .tab:hover{color:rgba(255,255,255,0.8)}
+        .tab.active{background:#E5001B;color:#fff}
+        .container{max-width:1200px;margin:0 auto;padding:20px}
+        .panel{display:none}.panel.active{display:block}
+
+        /* Stats Grid */
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:24px}
+        .stat{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;text-align:center}
+        .stat .val{font-size:28px;font-weight:700;color:#fff}
+        .stat .val.red{color:#E5001B}
+        .stat .val.green{color:#30D158}
+        .stat .val.blue{color:#5E9EFF}
+        .stat .val.orange{color:#FF9F0A}
+        .stat .lbl{font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+
+        /* Cards */
+        .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px;margin-bottom:16px}
+        .card h2{font-size:16px;font-weight:600;margin-bottom:14px;color:#fff;display:flex;align-items:center;gap:8px}
+
+        /* Funnel */
+        .funnel{display:flex;flex-direction:column;gap:8px}
+        .funnel-step{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,0.02);border-radius:10px;border:1px solid rgba(255,255,255,0.04)}
+        .funnel-step .fname{flex:1;font-size:14px;color:rgba(255,255,255,0.8)}
+        .funnel-step .fval{font-size:18px;font-weight:700;color:#fff;min-width:50px;text-align:right}
+        .funnel-step .fbar{flex:2;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden}
+        .funnel-step .fbar-fill{height:100%;border-radius:4px;transition:width .5s ease}
+        .f-red{background:#E5001B}.f-orange{background:#FF9F0A}.f-green{background:#30D158}.f-blue{background:#5E9EFF}
+
+        /* Leads Table */
+        .leads-table{width:100%;border-collapse:collapse;font-size:13px}
+        .leads-table th{text-align:left;padding:10px 12px;color:rgba(255,255,255,0.4);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid rgba(255,255,255,0.06)}
+        .leads-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.75)}
+        .leads-table tr:hover td{background:rgba(255,255,255,0.02)}
+        .status-badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600}
+        .status-new{background:rgba(94,158,255,0.15);color:#5E9EFF}
+        .status-video{background:rgba(255,159,10,0.15);color:#FF9F0A}
+        .status-traded{background:rgba(229,0,27,0.15);color:#E5001B}
+        .status-verification{background:rgba(48,209,88,0.15);color:#30D158}
+        .status-approved{background:rgba(48,209,88,0.3);color:#30D158}
+
+        /* Geo/Device bars */
+        .bar-list{display:flex;flex-direction:column;gap:6px}
+        .bar-item{display:flex;align-items:center;gap:10px}
+        .bar-label{font-size:13px;min-width:100px;color:rgba(255,255,255,0.7)}
+        .bar-track{flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+        .bar-fill{height:100%;border-radius:3px;background:#E5001B}
+        .bar-val{font-size:13px;font-weight:600;color:#fff;min-width:30px;text-align:right}
+
+        /* Timeline */
+        .timeline-chart{display:flex;align-items:flex-end;gap:6px;height:120px;padding-top:10px}
+        .timeline-day{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+        .timeline-bar{width:100%;border-radius:4px 4px 0 0;min-height:2px;transition:height .5s ease}
+        .timeline-label{font-size:10px;color:rgba(255,255,255,0.35)}
+        .timeline-val{font-size:11px;font-weight:600;color:rgba(255,255,255,0.6)}
+
+        /* Push section */
+        .quick-buttons{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+        .btn{padding:10px 18px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+        .btn-primary{background:#E5001B;color:#fff}
+        .btn-primary:hover{background:#ff1a33;transform:translateY(-1px)}
+        .btn-primary:disabled{opacity:.5;cursor:not-allowed}
+        .btn-secondary{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.08)}
+        .btn-secondary:hover{background:rgba(255,255,255,0.1)}
+        .btn-sm{padding:6px 12px;font-size:12px;border-radius:8px}
+
+        label{display:block;font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:5px}
+        input,textarea,select{width:100%;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px;outline:none;font-family:inherit;margin-bottom:12px}
+        input:focus,textarea:focus{border-color:#E5001B}
+        textarea{resize:vertical;min-height:70px}
+        select{cursor:pointer}
+
+        .result{margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:12px;color:rgba(255,255,255,0.6);display:none;white-space:pre-wrap;font-family:monospace}
+        .result.show{display:block}
+        .result.success{border-left:3px solid #30D158}
+        .result.error{border-left:3px solid #E5001B}
+
+        .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        @media(max-width:768px){
+            .row{grid-template-columns:1fr}
+            .stats-grid{grid-template-columns:repeat(2,1fr)}
+            .tabs{overflow-x:auto;flex-wrap:nowrap}
+            .header{flex-direction:column;gap:10px}
+        }
+        .refresh-btn{background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px}
+        .refresh-btn:hover{color:#fff;border-color:rgba(255,255,255,0.3)}
+        .loader{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .empty{text-align:center;padding:30px;color:rgba(255,255,255,0.3);font-size:14px}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔴 <span>Tesla Mindledge</span> — Admin</h1>
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+            <button class="tab" onclick="switchTab('leads')">👤 Leads</button>
+            <button class="tab" onclick="switchTab('push')">🔔 Push</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- ===== DASHBOARD ===== -->
+        <div class="panel active" id="panelDashboard">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <h2 style="font-size:18px;color:#fff">Overview</h2>
+                <button class="refresh-btn" onclick="loadAll()">🔄 Refresh</button>
+            </div>
+
+            <div class="stats-grid" id="overviewStats"></div>
+
+            <div class="row">
+                <div class="card">
+                    <h2>📈 Funnel</h2>
+                    <div class="funnel" id="funnelChart"></div>
+                </div>
+                <div class="card">
+                    <h2>📅 Last 7 Days</h2>
+                    <div class="timeline-chart" id="timelineChart"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="card">
+                    <h2>🌍 Geo</h2>
+                    <div class="bar-list" id="geoChart"></div>
+                </div>
+                <div class="card">
+                    <h2>📱 Devices</h2>
+                    <div class="bar-list" id="deviceChart"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📋 Lead Statuses</h2>
+                <div class="stats-grid" id="statusStats"></div>
+            </div>
+        </div>
+
+        <!-- ===== LEADS ===== -->
+        <div class="panel" id="panelLeads">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+                <h2 style="font-size:18px;color:#fff">Leads (<span id="leadsCount">0</span>)</h2>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <select id="filterStatus" onchange="loadLeads()" style="width:auto;margin:0;padding:8px 12px">
+                        <option value="">All Statuses</option>
+                        <option value="new">New</option>
+                        <option value="video">Watched Video</option>
+                        <option value="traded">Traded</option>
+                        <option value="verification">Verification</option>
+                        <option value="approved">Approved</option>
+                    </select>
+                    <button class="refresh-btn" onclick="loadLeads()">🔄</button>
+                </div>
+            </div>
+            <div class="card" style="overflow-x:auto;padding:0">
+                <table class="leads-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Buyer</th>
+                            <th>Geo</th>
+                            <th>Device</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leadsBody"></tbody>
+                </table>
+                <div class="empty" id="leadsEmpty" style="display:none">No leads yet</div>
+            </div>
+        </div>
+
+        <!-- ===== PUSH ===== -->
+        <div class="panel" id="panelPush">
+            <div class="card">
+                <h2>⚡ Quick Send</h2>
+                <div class="quick-buttons">
+                    <button class="btn btn-secondary" onclick="quickSend('📈 Market Alert','BTC surged +5.2% in the last hour. Check your portfolio now!')">📈 BTC</button>
+                    <button class="btn btn-secondary" onclick="quickSend('🔥 Trading Signal','New AI signal detected: Strong BUY opportunity. Open the app!')">🔥 Signal</button>
+                    <button class="btn btn-secondary" onclick="quickSend('💰 Profit Update','Your portfolio is up +$340 today! See the full breakdown.')">💰 Profit</button>
+                    <button class="btn btn-secondary" onclick="quickSend('🚀 Platform Update','New features available! Enhanced AI analysis and faster execution.')">🚀 Update</button>
+                    <button class="btn btn-secondary" onclick="quickSend('⚠️ Urgent','Important market shift detected. Review your positions immediately.')">⚠️ Urgent</button>
+                    <button class="btn btn-secondary" onclick="quickSend('🎁 Special Offer','Exclusive bonus for verified members. Claim before it expires!')">🎁 Offer</button>
+                </div>
+                <div id="quickResult" class="result"></div>
+            </div>
+            <div class="card">
+                <h2>✏️ Custom Push</h2>
+                <label>Title *</label>
+                <input type="text" id="pushTitle" placeholder="Notification title...">
+                <label>Body *</label>
+                <textarea id="pushBody" placeholder="Message..."></textarea>
+                <label>Image URL (optional)</label>
+                <input type="url" id="pushImage" placeholder="https://...">
+                <label>Click URL</label>
+                <input type="text" id="pushUrl" value="/">
+                <button class="btn btn-primary" onclick="sendCustomPush()">🚀 Send Push</button>
+                <div id="customResult" class="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = window.location.origin;
+
+        // ===== TAB SWITCHING =====
+        function switchTab(name) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('panel' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+            event.target.classList.add('active');
+            if (name === 'leads') loadLeads();
+            if (name === 'dashboard') loadAnalytics();
+        }
+
+        // ===== LOAD ALL DATA =====
+        async function loadAll() {
+            await Promise.all([loadAnalytics(), loadStats()]);
+        }
+
+        // ===== ANALYTICS =====
+        async function loadAnalytics() {
+            try {
+                const resp = await fetch(`${API}/api/analytics`);
+                const data = await resp.json();
+                renderOverview(data.overview);
+                renderFunnel(data.funnel, data.overview);
+                renderTimeline(data.timeline);
+                renderBarChart('geoChart', data.geoDistribution);
+                renderBarChart('deviceChart', data.deviceDistribution);
+                renderStatuses(data.leadStatuses);
+            } catch (e) { console.error('Analytics load failed:', e); }
+        }
+
+        function renderOverview(o) {
+            const el = document.getElementById('overviewStats');
+            const items = [
+                { val: o.totalVisitors, lbl: 'Visitors', cls: 'blue' },
+                { val: o.totalPageViews, lbl: 'Page Views', cls: '' },
+                { val: o.installGateShown, lbl: 'Gate Shown', cls: '' },
+                { val: o.installClicks, lbl: 'Install Clicks', cls: 'orange' },
+                { val: o.pwaInstalled, lbl: 'PWA Installs', cls: 'green' },
+                { val: o.pwaOpens, lbl: 'PWA Opens', cls: 'blue' },
+                { val: o.totalLeads, lbl: 'Total Leads', cls: 'red' },
+                { val: o.videoPlays, lbl: 'Video Plays', cls: '' },
+                { val: o.videoCompleted, lbl: 'Video Done', cls: '' },
+                { val: o.pushSubscribers, lbl: 'Push Subs', cls: 'green' },
+                { val: o.avgTimeOnPage + 's', lbl: 'Avg Time', cls: '' },
+                { val: o.totalSessions, lbl: 'Sessions', cls: '' }
+            ];
+            el.innerHTML = items.map(i => `<div class="stat"><div class="val ${i.cls}">${i.val}</div><div class="lbl">${i.lbl}</div></div>`).join('');
+        }
+
+        function renderFunnel(f, o) {
+            const el = document.getElementById('funnelChart');
+            const maxVal = Math.max(f.install_gate_shown, f.pwa_open, f.lead_complete, 1);
+            const steps = [
+                { name: 'Install Gate Shown', val: f.install_gate_shown, cls: 'f-blue' },
+                { name: 'Install Clicked', val: f.install_click, cls: 'f-blue' },
+                { name: 'PWA Installed', val: f.pwa_installed, cls: 'f-green' },
+                { name: 'PWA Opened', val: f.pwa_open, cls: 'f-green' },
+                { name: 'Name Filled', val: f.name_filled, cls: 'f-orange' },
+                { name: 'Phone Filled', val: f.phone_filled, cls: 'f-orange' },
+                { name: 'Lead Complete', val: f.lead_complete, cls: 'f-red' },
+                { name: 'Video Played', val: f.video_play, cls: 'f-blue' },
+                { name: 'Video Done', val: f.video_complete, cls: 'f-green' }
+            ];
+            el.innerHTML = steps.map(s => {
+                const pct = maxVal > 0 ? Math.round((s.val / maxVal) * 100) : 0;
+                return `<div class="funnel-step">
+                    <div class="fname">${s.name}</div>
+                    <div class="fbar"><div class="fbar-fill ${s.cls}" style="width:${pct}%"></div></div>
+                    <div class="fval">${s.val}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderTimeline(tl) {
+            const el = document.getElementById('timelineChart');
+            const days = Object.keys(tl).sort();
+            const maxV = Math.max(...days.map(d => tl[d].views), 1);
+            el.innerHTML = days.map(d => {
+                const v = tl[d];
+                const h = Math.max(Math.round((v.views / maxV) * 90), 2);
+                return `<div class="timeline-day">
+                    <div class="timeline-val">${v.views}</div>
+                    <div class="timeline-bar" style="height:${h}px;background:#E5001B"></div>
+                    <div class="timeline-val" style="color:#30D158;font-size:10px">${v.leads}L</div>
+                    <div class="timeline-label">${d.slice(5)}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderBarChart(elId, data) {
+            const el = document.getElementById(elId);
+            const entries = Object.entries(data).sort((a, b) => b[1] - a[1]);
+            if (entries.length === 0) { el.innerHTML = '<div class="empty">No data</div>'; return; }
+            const maxV = Math.max(...entries.map(e => e[1]), 1);
+            el.innerHTML = entries.slice(0, 8).map(([k, v]) => {
+                const pct = Math.round((v / maxV) * 100);
+                return `<div class="bar-item">
+                    <div class="bar-label">${k}</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+                    <div class="bar-val">${v}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderStatuses(st) {
+            const el = document.getElementById('statusStats');
+            const colors = { new: 'blue', video: 'orange', traded: 'red', verification: 'orange', approved: 'green' };
+            const entries = Object.entries(st);
+            if (entries.length === 0) { el.innerHTML = '<div class="stat"><div class="val">0</div><div class="lbl">No leads</div></div>'; return; }
+            el.innerHTML = entries.map(([k, v]) => `<div class="stat"><div class="val ${colors[k] || ''}">${v}</div><div class="lbl">${k}</div></div>`).join('');
+        }
+
+        // ===== LEADS =====
+        async function loadLeads() {
+            try {
+                const status = document.getElementById('filterStatus').value;
+                const url = `${API}/api/leads?limit=100${status ? '&status=' + status : ''}`;
+                const resp = await fetch(url);
+                const data = await resp.json();
+                document.getElementById('leadsCount').textContent = data.total;
+                const body = document.getElementById('leadsBody');
+                const empty = document.getElementById('leadsEmpty');
+
+                if (data.leads.length === 0) {
+                    body.innerHTML = '';
+                    empty.style.display = 'block';
+                    return;
+                }
+                empty.style.display = 'none';
+
+                body.innerHTML = data.leads.map(l => {
+                    const date = (l.createdAt || l.receivedAt || '').slice(0, 16).replace('T', ' ');
+                    const dev = l.deviceInfo?.device || '—';
+                    const statusCls = 'status-' + (l.status || 'new');
+                    return `<tr>
+                        <td>${date}</td>
+                        <td>${l.firstName || ''} ${l.lastName || ''}</td>
+                        <td>${l.email || '—'}</td>
+                        <td>${l.phone || '—'}</td>
+                        <td>${l.buyer || '—'}</td>
+                        <td>${l.geoInfo?.country || l.geo || '—'}</td>
+                        <td>${dev}</td>
+                        <td><span class="status-badge ${statusCls}">${l.status || 'new'}</span></td>
+                        <td>
+                            <select class="btn-sm" onchange="updateStatus('${l.leadId}',this.value)" style="padding:4px 8px;font-size:11px;width:auto;margin:0;background:rgba(255,255,255,0.05)">
+                                <option value="new" ${l.status==='new'?'selected':''}>New</option>
+                                <option value="video" ${l.status==='video'?'selected':''}>Video</option>
+                                <option value="traded" ${l.status==='traded'?'selected':''}>Traded</option>
+                                <option value="verification" ${l.status==='verification'?'selected':''}>Verification</option>
+                                <option value="approved" ${l.status==='approved'?'selected':''}>Approved</option>
+                            </select>
+                        </td>
+                    </tr>`;
+                }).join('');
+            } catch (e) { console.error('Leads load failed:', e); }
+        }
+
+        async function updateStatus(leadId, status) {
+            try {
+                await fetch(`${API}/api/lead/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ leadId, status })
+                });
+                loadLeads();
+                loadAnalytics();
+            } catch (e) { console.error('Status update failed:', e); }
+        }
+
+        // ===== PUSH =====
+        async function loadStats() {
+            try {
+                const resp = await fetch(`${API}/api/stats`);
+                const data = await resp.json();
+                // Stats loaded in analytics overview
+            } catch (e) {}
+        }
+
+        async function sendPush(title, body, image, url) {
+            const resp = await fetch(`${API}/api/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, body, image: image || undefined, url: url || '/' })
+            });
+            return resp.json();
+        }
+
+        async function quickSend(title, body) {
+            const el = document.getElementById('quickResult');
+            el.className = 'result show'; el.textContent = 'Sending...';
+            try {
+                const data = await sendPush(title, body);
+                el.className = 'result show success';
+                el.textContent = `✅ Sent: ${data.sent} | Errors: ${data.errors} | Subs: ${data.totalSubscribers}`;
+            } catch (e) { el.className = 'result show error'; el.textContent = '❌ ' + e.message; }
+        }
+
+        async function sendCustomPush() {
+            const title = document.getElementById('pushTitle').value.trim();
+            const body = document.getElementById('pushBody').value.trim();
+            const image = document.getElementById('pushImage').value.trim();
+            const url = document.getElementById('pushUrl').value.trim();
+            const el = document.getElementById('customResult');
+            if (!title || !body) { el.className = 'result show error'; el.textContent = '❌ Title & body required'; return; }
+            el.className = 'result show'; el.textContent = 'Sending...';
+            try {
+                const data = await sendPush(title, body, image, url);
+                el.className = 'result show success';
+                el.textContent = `✅ Sent: ${data.sent} | Errors: ${data.errors} | Subs: ${data.totalSubscribers}`;
+            } catch (e) { el.className = 'result show error'; el.textContent = '❌ ' + e.message; }
+        }
+
+        // ===== INIT =====
+        loadAll();
+        setInterval(loadAll, 30000); // auto-refresh every 30s
+    </script>
+</body>
+</html>
