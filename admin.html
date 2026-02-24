@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin — Tesla Mindledge</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#08080a;color:#e3e3e3;min-height:100vh}
+.header{background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px)}
+.header h1{font-size:20px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px}
+.header h1 span{color:#E5001B}
+.tabs{display:flex;gap:4px;background:rgba(255,255,255,0.04);border-radius:10px;padding:4px}
+.tab{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:rgba(255,255,255,0.5);transition:all .2s;border:none;background:none}
+.tab:hover{color:rgba(255,255,255,0.8)}
+.tab.active{background:#E5001B;color:#fff}
+.container{max-width:1200px;margin:0 auto;padding:20px}
+.panel{display:none}.panel.active{display:block}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:24px}
+.stat{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;text-align:center}
+.stat .val{font-size:28px;font-weight:700;color:#fff}
+.stat .val.red{color:#E5001B}.stat .val.green{color:#30D158}.stat .val.blue{color:#5E9EFF}.stat .val.orange{color:#FF9F0A}.stat .val.purple{color:#A064FF}
+.stat .lbl{font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px;margin-bottom:16px}
+.card h2{font-size:16px;font-weight:600;margin-bottom:14px;color:#fff}
+.funnel{display:flex;flex-direction:column;gap:8px}
+.funnel-step{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,0.02);border-radius:10px}
+.funnel-step .fname{flex:1;font-size:14px;color:rgba(255,255,255,0.8)}
+.funnel-step .fval{font-size:18px;font-weight:700;color:#fff;min-width:50px;text-align:right}
+.funnel-step .fbar{flex:2;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden}
+.funnel-step .fbar-fill{height:100%;border-radius:4px}
+.f-red{background:#E5001B}.f-orange{background:#FF9F0A}.f-green{background:#30D158}.f-blue{background:#5E9EFF}
+.leads-table{width:100%;border-collapse:collapse;font-size:13px}
+.leads-table th{text-align:left;padding:10px 12px;color:rgba(255,255,255,0.4);font-weight:600;font-size:11px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06)}
+.leads-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.75)}
+.leads-table tr:hover td{background:rgba(255,255,255,0.02)}
+.status-badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600}
+.status-new{background:rgba(94,158,255,0.15);color:#5E9EFF}
+.status-video{background:rgba(255,159,10,0.15);color:#FF9F0A}
+.status-traded{background:rgba(229,0,27,0.15);color:#E5001B}
+.status-verification{background:rgba(48,209,88,0.15);color:#30D158}
+.status-approved{background:rgba(48,209,88,0.3);color:#30D158}
+.status-dep{background:rgba(160,100,255,0.2);color:#A064FF}
+.status-wrong_number{background:rgba(229,0,27,0.2);color:#E5001B}
+.status-no_answer{background:rgba(48,209,88,0.15);color:#30D158}
+.status-trash{background:rgba(229,0,27,0.2);color:#E5001B}
+.status-invalid{background:rgba(229,0,27,0.2);color:#E5001B}
+.status-test{background:rgba(255,214,10,0.2);color:#FFD60A}
+.bar-list{display:flex;flex-direction:column;gap:6px}
+.bar-item{display:flex;align-items:center;gap:10px}
+.bar-label{font-size:13px;min-width:100px;color:rgba(255,255,255,0.7)}
+.bar-track{flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;background:#E5001B}
+.bar-val{font-size:13px;font-weight:600;color:#fff;min-width:30px;text-align:right}
+.timeline-chart{display:flex;align-items:flex-end;gap:6px;height:120px;padding-top:10px}
+.timeline-day{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.timeline-bar{width:100%;border-radius:4px 4px 0 0;min-height:2px}
+.timeline-label{font-size:10px;color:rgba(255,255,255,0.35)}
+.timeline-val{font-size:11px;font-weight:600;color:rgba(255,255,255,0.6)}
+.quick-buttons{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.btn{padding:10px 18px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-primary{background:#E5001B;color:#fff}.btn-primary:hover{background:#ff1a33}
+.btn-secondary{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.08)}
+.btn-secondary:hover{background:rgba(255,255,255,0.1)}
+label{display:block;font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:5px}
+input,textarea{width:100%;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px;outline:none;font-family:inherit;margin-bottom:12px}
+input:focus,textarea:focus{border-color:#E5001B}
+textarea{resize:vertical;min-height:70px}
+select{padding:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:13px;outline:none}
+.result{margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:12px;color:rgba(255,255,255,0.6);display:none;font-family:monospace}
+.result.show{display:block}.result.success{border-left:3px solid #30D158}.result.error{border-left:3px solid #E5001B}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.empty{text-align:center;padding:30px;color:rgba(255,255,255,0.3);font-size:14px}
+.refresh-btn{background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px}
+.refresh-btn:hover{color:#fff;border-color:rgba(255,255,255,0.3)}
+@media(max-width:768px){.row{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,1fr)}.tabs{overflow-x:auto}.header{flex-direction:column;gap:10px}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🔴 <span>Tesla Mindledge</span> — Admin</h1>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
+    <button class="tab" onclick="switchTab('leads',this)">👤 Leads</button>
+    <button class="tab" onclick="switchTab('push',this)">🔔 Push</button>
+  </div>
+</div>
+<div class="container">
+  <!-- DASHBOARD -->
+  <div class="panel active" id="panelDashboard">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="font-size:18px;color:#fff">Overview</h2>
+      <button class="refresh-btn" onclick="loadAll()">🔄 Refresh</button>
+    </div>
+    <div class="stats-grid" id="overviewStats"></div>
+    <div class="row">
+      <div class="card"><h2>📈 Funnel</h2><div class="funnel" id="funnelChart"></div></div>
+      <div class="card"><h2>📅 Last 7 Days</h2><div class="timeline-chart" id="timelineChart"></div></div>
+    </div>
+    <div class="row">
+      <div class="card"><h2>🌍 Geo</h2><div class="bar-list" id="geoChart"></div></div>
+      <div class="card"><h2>📱 Devices</h2><div class="bar-list" id="deviceChart"></div></div>
+    </div>
+    <div class="card"><h2>📋 Lead Statuses</h2><div class="stats-grid" id="statusStats"></div></div>
+  </div>
+  <!-- LEADS -->
+  <div class="panel" id="panelLeads">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <h2 style="font-size:18px;color:#fff">Leads (<span id="leadsCount">0</span>)</h2>
+      <div style="display:flex;gap:8px">
+        <select id="filterStatus" onchange="loadLeads()">
+          <option value="">All</option>
+          <option value="new">New</option><option value="video">Video</option><option value="traded">Traded</option>
+          <option value="verification">Verification</option><option value="approved">Approved</option>
+          <option value="dep">DEP</option><option value="wrong_number">Wrong Number</option>
+          <option value="no_answer">No Answer</option><option value="trash">Trash</option>
+          <option value="invalid">Invalid</option><option value="test">Test</option>
+        </select>
+        <button class="refresh-btn" onclick="loadLeads()">🔄</button>
+      </div>
+    </div>
+    <div class="card" style="overflow-x:auto;padding:0">
+      <table class="leads-table"><thead><tr>
+        <th>Date</th><th>Name</th><th>Email</th><th>Phone</th><th>Buyer</th><th>Geo</th><th>Device</th><th>Status</th><th>Action</th>
+      </tr></thead><tbody id="leadsBody"></tbody></table>
+      <div class="empty" id="leadsEmpty" style="display:none">No leads yet</div>
+    </div>
+  </div>
+  <!-- PUSH -->
+  <div class="panel" id="panelPush">
+    <div class="card">
+      <h2>⚡ Quick Send</h2>
+      <div class="quick-buttons">
+        <button class="btn btn-secondary" onclick="qSend('📈 Market Alert','BTC surged +5.2%! Check your portfolio now!')">📈 BTC</button>
+        <button class="btn btn-secondary" onclick="qSend('🔥 Trading Signal','New AI signal: Strong BUY opportunity!')">🔥 Signal</button>
+        <button class="btn btn-secondary" onclick="qSend('💰 Profit Update','Your portfolio is up +$340 today!')">💰 Profit</button>
+        <button class="btn btn-secondary" onclick="qSend('🚀 Platform Update','New features available!')">🚀 Update</button>
+        <button class="btn btn-secondary" onclick="qSend('⚠️ Urgent','Important market shift. Review positions!')">⚠️ Urgent</button>
+        <button class="btn btn-secondary" onclick="qSend('🎁 Special Offer','Exclusive bonus! Claim before it expires!')">🎁 Offer</button>
+      </div>
+      <div id="qResult" class="result"></div>
+    </div>
+    <div class="card">
+      <h2>✏️ Custom Push</h2>
+      <label>Title *</label><input id="pTitle" placeholder="Title...">
+      <label>Body *</label><textarea id="pBody" placeholder="Message..."></textarea>
+      <label>Image URL</label><input id="pImage" placeholder="https://...">
+      <label>Click URL</label><input id="pUrl" value="/">
+      <button class="btn btn-primary" onclick="customSend()">🚀 Send Push</button>
+      <div id="cResult" class="result"></div>
+    </div>
+  </div>
+</div>
+<script>
+const API=window.location.origin;
+const STATUS_OPTIONS='<option value="new">New</option><option value="video">Video</option><option value="traded">Traded</option><option value="verification">Verification</option><option value="approved">Approved</option><option value="dep">DEP</option><option value="wrong_number">Wrong Number</option><option value="no_answer">No Answer</option><option value="trash">Trash</option><option value="invalid">Invalid</option><option value="test">Test</option>';
+const STATUS_COLORS={new:'blue',video:'orange',traded:'red',verification:'orange',approved:'green',dep:'purple',wrong_number:'red',no_answer:'green',trash:'red',invalid:'red',test:''};
+
+function switchTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
+  btn.classList.add('active');
+  if(name==='leads')loadLeads();
+}
+async function loadAll(){await Promise.all([loadAnalytics()]);}
+
+async function loadAnalytics(){
+  try{
+    const r=await fetch(`${API}/api/analytics`);const d=await r.json();
+    renderOverview(d.overview);renderFunnel(d.funnel);renderTimeline(d.timeline);
+    renderBars('geoChart',d.geoDistribution);renderBars('deviceChart',d.deviceDistribution);renderStatuses(d.leadStatuses);
+  }catch(e){console.error(e);}
+}
+
+function renderOverview(o){
+  document.getElementById('overviewStats').innerHTML=[
+    {v:o.totalVisitors,l:'Visitors',c:'blue'},{v:o.totalPageViews,l:'Page Views',c:''},
+    {v:o.installGateShown,l:'Gate Shown',c:''},{v:o.installClicks,l:'Install Clicks',c:'orange'},
+    {v:o.pwaInstalled,l:'PWA Installs',c:'green'},{v:o.pwaOpens,l:'PWA Opens',c:'blue'},
+    {v:o.totalLeads,l:'Total Leads',c:'red'},{v:o.videoPlays,l:'Video Plays',c:''},
+    {v:o.videoCompleted,l:'Video Done',c:''},{v:o.pushSubscribers,l:'Push Subs',c:'green'},
+    {v:o.avgTimeOnPage+'s',l:'Avg Time',c:''},{v:o.totalSessions,l:'Sessions',c:''}
+  ].map(i=>`<div class="stat"><div class="val ${i.c}">${i.v}</div><div class="lbl">${i.l}</div></div>`).join('');
+}
+
+function renderFunnel(f){
+  const mx=Math.max(f.install_gate_shown,f.pwa_open,f.lead_complete,1);
+  document.getElementById('funnelChart').innerHTML=[
+    {n:'Gate Shown',v:f.install_gate_shown,c:'f-blue'},{n:'Install Click',v:f.install_click,c:'f-blue'},
+    {n:'PWA Installed',v:f.pwa_installed,c:'f-green'},{n:'PWA Open',v:f.pwa_open,c:'f-green'},
+    {n:'Name',v:f.name_filled,c:'f-orange'},{n:'Phone',v:f.phone_filled,c:'f-orange'},
+    {n:'Lead Complete',v:f.lead_complete,c:'f-red'},{n:'Video Play',v:f.video_play,c:'f-blue'},
+    {n:'Video Done',v:f.video_complete,c:'f-green'}
+  ].map(s=>`<div class="funnel-step"><div class="fname">${s.n}</div><div class="fbar"><div class="fbar-fill ${s.c}" style="width:${Math.round(s.v/mx*100)}%"></div></div><div class="fval">${s.v}</div></div>`).join('');
+}
+
+function renderTimeline(tl){
+  const days=Object.keys(tl).sort();const mx=Math.max(...days.map(d=>tl[d].views),1);
+  document.getElementById('timelineChart').innerHTML=days.map(d=>{
+    const v=tl[d];const h=Math.max(Math.round(v.views/mx*90),2);
+    return`<div class="timeline-day"><div class="timeline-val">${v.views}</div><div class="timeline-bar" style="height:${h}px;background:#E5001B"></div><div class="timeline-val" style="color:#30D158;font-size:10px">${v.leads}L</div><div class="timeline-label">${d.slice(5)}</div></div>`;
+  }).join('');
+}
+
+function renderBars(id,data){
+  const el=document.getElementById(id);const e=Object.entries(data).sort((a,b)=>b[1]-a[1]);
+  if(!e.length){el.innerHTML='<div class="empty">No data</div>';return;}
+  const mx=Math.max(...e.map(x=>x[1]),1);
+  el.innerHTML=e.slice(0,8).map(([k,v])=>`<div class="bar-item"><div class="bar-label">${k}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/mx*100)}%"></div></div><div class="bar-val">${v}</div></div>`).join('');
+}
+
+function renderStatuses(st){
+  const el=document.getElementById('statusStats');
+  const e=Object.entries(st).filter(([k])=>k!=='test');const tc=st.test||0;
+  if(!e.length&&!tc){el.innerHTML='<div class="stat"><div class="val">0</div><div class="lbl">No leads</div></div>';return;}
+  let h=e.map(([k,v])=>`<div class="stat"><div class="val ${STATUS_COLORS[k]||''}">${v}</div><div class="lbl">${k.replace('_',' ')}</div></div>`).join('');
+  if(tc)h+=`<div class="stat" style="opacity:0.4"><div class="val">${tc}</div><div class="lbl">test</div></div>`;
+  el.innerHTML=h;
+}
+
+async function loadLeads(){
+  try{
+    const s=document.getElementById('filterStatus').value;
+    const r=await fetch(`${API}/api/leads?limit=100${s?'&status='+s:''}`);const d=await r.json();
+    document.getElementById('leadsCount').textContent=d.total;
+    const body=document.getElementById('leadsBody'),empty=document.getElementById('leadsEmpty');
+    if(!d.leads.length){body.innerHTML='';empty.style.display='block';return;}
+    empty.style.display='none';
+    body.innerHTML=d.leads.map(l=>{
+      const dt=(l.createdAt||'').slice(0,16).replace('T',' ');
+      const opts=STATUS_OPTIONS.replace(`value="${l.status}"`,`value="${l.status}" selected`);
+      return`<tr><td>${dt}</td><td>${l.firstName||''} ${l.lastName||''}</td><td>${l.email||'—'}</td><td>${l.phone||'—'}</td><td>${l.buyer||'—'}</td><td>${l.geoInfo?.country||l.geo||'—'}</td><td>${l.deviceInfo?.device||'—'}</td><td><span class="status-badge status-${l.status||'new'}">${(l.status||'new').replace('_',' ')}</span></td><td><select onchange="updStatus('${l.leadId}',this.value)" style="padding:4px 8px;font-size:11px;width:auto;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff">${opts}</select></td></tr>`;
+    }).join('');
+  }catch(e){console.error(e);}
+}
+
+async function updStatus(id,status){
+  await fetch(`${API}/api/lead/status`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({leadId:id,status})});
+  loadLeads();loadAll();
+}
+
+async function sendPush(t,b,img,url){
+  const r=await fetch(`${API}/api/send`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:t,body:b,image:img,url:url||'/'})});
+  return r.json();
+}
+async function qSend(t,b){
+  const el=document.getElementById('qResult');el.className='result show';el.textContent='Sending...';
+  try{const d=await sendPush(t,b);el.className='result show success';el.textContent=`✅ Sent:${d.sent} Err:${d.errors} Subs:${d.totalSubscribers}`;}
+  catch(e){el.className='result show error';el.textContent='❌ '+e.message;}
+}
+async function customSend(){
+  const t=document.getElementById('pTitle').value.trim(),b=document.getElementById('pBody').value.trim();
+  const el=document.getElementById('cResult');
+  if(!t||!b){el.className='result show error';el.textContent='Title & body required';return;}
+  el.className='result show';el.textContent='Sending...';
+  try{const d=await sendPush(t,b,document.getElementById('pImage').value.trim(),document.getElementById('pUrl').value.trim());el.className='result show success';el.textContent=`✅ Sent:${d.sent} Err:${d.errors}`;}
+  catch(e){el.className='result show error';el.textContent='❌ '+e.message;}
+}
+
+loadAll();setInterval(loadAll,30000);
+</script>
+</body>
+</html>
